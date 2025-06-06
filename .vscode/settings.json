@@ -1,0 +1,9 @@
+{
+  "files.exclude": {
+    "skeleton-app": true,
+  },
+  "[makefile]": {
+    "editor.insertSpaces": false,
+    "editor.detectIndentation": false
+},
+}

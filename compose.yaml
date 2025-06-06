@@ -1,0 +1,13 @@
+services:
+  skeleton-app:
+    image: node:22.14.0-slim
+    ports:
+      - 5173:5173
+    working_dir: /app
+    volumes:
+      - ./skeleton-app:/app
+      - skeleton-app-node-modules:/app/node_modules
+    command: /bin/sh -c "npm install && npm run dev"
+
+volumes:
+  skeleton-app-node-modules:
