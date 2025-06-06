@@ -46,7 +46,7 @@ wheels = [
 ]
 
 [[package]]
-name = "fast-api-server"
+name = "llm-app-server"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

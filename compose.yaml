@@ -1,21 +1,21 @@
 services:
   skeleton-app:
     depends_on:
-      - fast-api-server
+      - llm-app-server
     image: node:22.14.0-slim
     ports:
       - 5173:5173
     working_dir: /app
     environment:
-      VITE_API_BASE_URL: "http://fast-api-server:8000"
+      VITE_API_BASE_URL: "http://llm-app-server:8000"
     volumes:
       - ./skeleton-app:/app
       - skeleton-app-node-modules:/app/node_modules
     command: /bin/sh -c "npm install && npm run dev"
   
-  fast-api-server:
+  llm-app-server:
     build:
-      context: ./fast-api-server
+      context: ./llm-app-server
       target: development
       args:
         PYTHON_VERSION: 3.11.11
@@ -24,12 +24,12 @@ services:
     environment:
       GOOGLE_CLOUD_PROJECT: emulator
     volumes:
-      - ./fast-api-server:/app
-      - fast-api-server-venv:/app/.venv
+      - ./llm-app-server:/app
+      - llm-app-server-venv:/app/.venv
     command:
       ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--log-config", "src/logging.ini", "--reload"]
     tty: true
 
 volumes:
   skeleton-app-node-modules:
-  fast-api-server-venv:
+  llm-app-server-venv:

@@ -1,7 +1,7 @@
 {
   "files.exclude": {
     "skeleton-app": true,
-    "fast-api-server": true,
+    "llm-app-server": true,
   },
   "[makefile]": {
     "editor.insertSpaces": false,

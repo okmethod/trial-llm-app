@@ -7,7 +7,7 @@
 			"path": "skeleton-app"
 		},
 		{
-			"path": "fast-api-server"
+			"path": "llm-app-server"
 		},
 	],
 	"settings": {}
