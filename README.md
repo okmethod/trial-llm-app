@@ -19,8 +19,8 @@
 - 静的アセットデプロイ
 
   ```sh
-  (cd skeleton-app && npm run build)
-  (cd skeleton-app && npm run deploy)
+  (cd web-client && npm run build)
+  (cd web-client && npm run deploy)
   ```
 
 - ブラウザでアクセス

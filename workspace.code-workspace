@@ -4,7 +4,7 @@
 			"path": "."
 		},
 		{
-			"path": "skeleton-app"
+			"path": "web-client"
 		},
 		{
 			"path": "llm-app-server"
