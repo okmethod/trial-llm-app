@@ -11,12 +11,7 @@ export async function fetchApi(
   requestConfig: RequestInit,
 ): Promise<Response> {
   try {
-    const response = await fetchFunction(url, requestConfig);
-    if (!response.ok) {
-      console.error("API response:", response.status);
-      throw new Error(`Failed to fetch: ${requestConfig.method} ${url}`);
-    }
-    return response;
+    return await fetchFunction(url, requestConfig);
   } catch (e) {
     console.error("API error:", e);
     throw new Error(`Failed to fetch: ${requestConfig.method} ${url}`);
