@@ -4,21 +4,54 @@ import logging
 from typing import Any, TypedDict, cast
 
 from fastapi import HTTPException, UploadFile, status
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+from src.schemas.message import MessageEntryWithImageKey, MessageEntryWithImageUri, MessageHistory
+
 logger = logging.getLogger(__name__)
-
-
-class GeminiImageDict(TypedDict):
-    type: str
-    image_url: str
 
 
 def image_file_to_data_uri(image: UploadFile) -> str:
     image_bytes = image.file.read() if hasattr(image, "file") else asyncio.run(image.read())
     image_b64 = base64.b64encode(image_bytes).decode("utf-8")
     return f"data:{image.content_type};base64,{image_b64}"
+
+
+def convert_entries_with_key_to_uri(
+    entries: list[MessageEntryWithImageKey], images: list[UploadFile]
+) -> list[MessageEntryWithImageUri]:
+    image_map = {f.filename: f for f in images} if images else {}
+    return [
+        MessageEntryWithImageUri(
+            role=entry.role,
+            text=entry.text,
+            image_uri=image_file_to_data_uri(image_map[entry.image_key])
+            if entry.image_key and entry.image_key in image_map
+            else None,
+        )
+        for entry in entries
+    ]
+
+
+def entry_to_message(entry: MessageEntryWithImageUri) -> HumanMessage | AIMessage:
+    role = entry.role
+    text = entry.text
+    image_uri = entry.image_uri
+    if role == "ai":
+        return AIMessage(content=text)
+    if image_uri:
+        return HumanMessage(content=[text, {"type": "image_url", "image_url": image_uri}])
+    return HumanMessage(content=[text])
+
+
+def convert_entries_to_messages(entries: list[MessageEntryWithImageUri]) -> list[HumanMessage | AIMessage]:
+    return [entry_to_message(entry) for entry in entries]
+
+
+class GeminiImageDict(TypedDict):
+    type: str
+    image_url: str
 
 
 def uploadfile_to_gemini_image_dict(image: UploadFile) -> GeminiImageDict:
@@ -29,16 +62,23 @@ def uploadfile_to_gemini_image_dict(image: UploadFile) -> GeminiImageDict:
 
 
 def handle_llm_invoke(
-    llm_model: str, prompt: str, image: UploadFile | None = None
+    llm_model: str, prompt: str, image: UploadFile | None = None, history: MessageHistory | None = None
 ) -> str | list[str | dict[str, object]]:
     try:
         llm = ChatGoogleGenerativeAI(model=llm_model)
+        messages = []
+
+        if history:
+            entries = convert_entries_with_key_to_uri(history.entries, history.images)
+            messages.extend(convert_entries_to_messages(entries))
+
         if image is not None:
             image_dict = uploadfile_to_gemini_image_dict(image)
-            messages = [HumanMessage(content=[prompt, cast(dict[str, Any], image_dict)])]
-            result = llm.invoke(messages)
+            messages.append(HumanMessage(content=[prompt, cast(dict[str, Any], image_dict)]))
         else:
-            result = llm.invoke(prompt)
+            messages.append(HumanMessage(content=[prompt]))
+
+        result = llm.invoke(messages)
     except Exception as e:
         logger.exception("Failed to generate text.")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR) from e
