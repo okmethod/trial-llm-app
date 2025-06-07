@@ -1,16 +1,10 @@
 <script lang="ts">
-  import ImageUpload from "$lib/components/buttons/ImageUpload.svelte";
   import generateText from "$lib/api/generateText";
+  import type { ChatEntry } from "$lib/types/chat";
   import type { ImageWithPreview } from "$lib/types/image";
+  import ChatEntriesVeiw from "$lib/components/ChatEntriesVeiw.svelte";
+  import ImageUpload from "$lib/components/buttons/ImageUpload.svelte";
   import { showErrorToast } from "$lib/utils/toaster";
-
-  interface ChatEntry {
-    role: "user" | "assistant";
-    content: {
-      text: string;
-      image?: ImageWithPreview;
-    };
-  }
 
   let chatEntries: ChatEntry[] = [];
 
@@ -45,26 +39,8 @@
 
 <div class="flex flex-col items-center justify-center p-4 space-y-4 max-w-4xl mx-auto">
   <h2 class="h2">Dialog Chat</h2>
-  <div class="w-full border rounded p-4 bg-surface-100-900 h-[400px] flex flex-col space-y-2 overflow-y-auto">
-    {#if chatEntries.length === 0}
-      <div class="text-gray-400">チャットを始めましょう。</div>
-    {/if}
-    {#each chatEntries as msg, index (index)}
-      <div class:self-end={msg.role === "user"} class:self-start={msg.role === "assistant"}>
-        <span class="font-bold">{msg.role === "user" ? "You" : "Ai"}:</span>
-        <div class="rounded bg-primary-900 p-2 min-w-lg max-w-[80%] border">
-          <span>{msg.content.text}</span>
-          {#if msg.content.image}
-            <div class="mt-2 flex justify-center">
-              <img src={msg.content.image.url} alt="UploadedImage" class="w-32 rounded border" />
-            </div>
-          {/if}
-        </div>
-      </div>
-    {/each}
-    {#if isProcessing}
-      <div class="text-gray-400">応答中...</div>
-    {/if}
+  <div class="w-full h-[400px] bg-surface-100-900">
+    <ChatEntriesVeiw {chatEntries} {isProcessing} />
   </div>
   <form class="w-full flex space-x-2" on:submit|preventDefault={sendMessage}>
     <label id="chat-label" for="chat-input" class="sr-only">チャット入力</label>
