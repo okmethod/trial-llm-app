@@ -6,7 +6,10 @@
 
   interface ChatEntry {
     role: "user" | "assistant";
-    content: string;
+    content: {
+      text: string;
+      image?: ImageWithPreview;
+    };
   }
 
   let chatEntries: ChatEntry[] = [];
@@ -17,11 +20,20 @@
 
   async function sendMessage() {
     if (!currentInputText.trim()) return;
-    chatEntries = [...chatEntries, { role: "user", content: currentInputText }];
+    chatEntries = [
+      ...chatEntries,
+      {
+        role: "user",
+        content: {
+          text: currentInputText,
+          ...(currentImage ? { image: currentImage } : {}),
+        },
+      },
+    ];
     isProcessing = true;
     try {
       const answer = await generateText(fetch, currentInputText, currentImage?.file ?? undefined);
-      chatEntries = [...chatEntries, { role: "assistant", content: answer }];
+      chatEntries = [...chatEntries, { role: "assistant", content: { text: answer } }];
     } catch {
       showErrorToast("エラーが発生しました");
     }
@@ -41,7 +53,12 @@
       <div class:self-end={msg.role === "user"} class:self-start={msg.role === "assistant"}>
         <span class="font-bold">{msg.role === "user" ? "You" : "Ai"}:</span>
         <div class="rounded bg-primary-900 p-2 min-w-lg max-w-[80%] border">
-          <span>{msg.content}</span>
+          <span>{msg.content.text}</span>
+          {#if msg.content.image}
+            <div class="mt-2 flex justify-center">
+              <img src={msg.content.image.url} alt="UploadedImage" class="w-32 rounded border" />
+            </div>
+          {/if}
         </div>
       </div>
     {/each}
