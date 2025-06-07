@@ -41,9 +41,10 @@ async def generate_text(
         else None
     )
     content = handle_llm_invoke(
-        settings.llm_model,
-        prompt,
-        image,
-        history,
+        llm_model=settings.llm_model,
+        system_prompt=settings.system_prompt,
+        user_prompt=prompt,
+        image=image,
+        history=history,
     )
     return SimpleMessageResponse(message=str(content))

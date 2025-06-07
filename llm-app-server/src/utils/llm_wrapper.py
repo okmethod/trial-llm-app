@@ -4,7 +4,7 @@ import logging
 from typing import Any, TypedDict, cast
 
 from fastapi import HTTPException, UploadFile, status
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.schemas.message import MessageEntryWithImageKey, MessageEntryWithImageUri, MessageHistory
@@ -62,11 +62,16 @@ def uploadfile_to_gemini_image_dict(image: UploadFile) -> GeminiImageDict:
 
 
 def handle_llm_invoke(
-    llm_model: str, prompt: str, image: UploadFile | None = None, history: MessageHistory | None = None
+    llm_model: str,
+    system_prompt: str,
+    user_prompt: str,
+    image: UploadFile | None = None,
+    history: MessageHistory | None = None,
 ) -> str | list[str | dict[str, object]]:
     try:
         llm = ChatGoogleGenerativeAI(model=llm_model)
         messages = []
+        messages.append(SystemMessage(content=system_prompt))
 
         if history:
             entries = convert_entries_with_key_to_uri(history.entries, history.images)
@@ -74,9 +79,9 @@ def handle_llm_invoke(
 
         if image is not None:
             image_dict = uploadfile_to_gemini_image_dict(image)
-            messages.append(HumanMessage(content=[prompt, cast(dict[str, Any], image_dict)]))
+            messages.append(HumanMessage(content=[user_prompt, cast(dict[str, Any], image_dict)]))
         else:
-            messages.append(HumanMessage(content=[prompt]))
+            messages.append(HumanMessage(content=[user_prompt]))
 
         result = llm.invoke(messages)
     except Exception as e:
