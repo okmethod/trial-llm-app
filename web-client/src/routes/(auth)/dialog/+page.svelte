@@ -17,7 +17,7 @@
     chatEntries = [
       ...chatEntries,
       {
-        role: "user",
+        role: "human",
         content: {
           text: currentInputText,
           ...(currentImage ? { image: currentImage } : {}),
@@ -27,7 +27,7 @@
     isProcessing = true;
     try {
       const answer = await generateText(fetch, currentInputText, currentImage?.file ?? undefined);
-      chatEntries = [...chatEntries, { role: "assistant", content: { text: answer } }];
+      chatEntries = [...chatEntries, { role: "ai", content: { text: answer } }];
     } catch {
       showErrorToast("エラーが発生しました");
     }

@@ -10,8 +10,8 @@
     <div class="text-gray-400">チャットを始めましょう。</div>
   {/if}
   {#each chatEntries as msg, index (index)}
-    <div class:self-end={msg.role === "user"} class:self-start={msg.role === "assistant"}>
-      <span class="font-bold">{msg.role === "user" ? "You" : "Ai"}:</span>
+    <div class:self-end={msg.role === "human"} class:self-start={msg.role === "ai"}>
+      <span class="font-bold">{msg.role === "human" ? "You" : "Ai"}:</span>
       <div class="rounded bg-primary-900 p-2 min-w-lg max-w-[80%] border">
         <span>{msg.content.text}</span>
         {#if msg.content.image}

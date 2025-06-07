@@ -1,7 +1,9 @@
 import type { ImageWithPreview } from "$lib/types/image";
 
+export type ChatRole = "human" | "ai";
+
 export interface ChatEntry {
-  role: "user" | "assistant";
+  role: ChatRole;
   content: {
     text: string;
     image?: ImageWithPreview;
