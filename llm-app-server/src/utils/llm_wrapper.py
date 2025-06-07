@@ -4,7 +4,7 @@ import logging
 from typing import Any, TypedDict, cast
 
 from fastapi import HTTPException, UploadFile, status
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.schemas.message import MessageEntryWithImageKey, MessageEntryWithImageUri, MessageHistory
@@ -61,6 +61,22 @@ def uploadfile_to_gemini_image_dict(image: UploadFile) -> GeminiImageDict:
     }
 
 
+def output_messeges_summary(messages: list[BaseMessage]) -> None:
+    def summarize_message(msg: BaseMessage) -> dict[str, Any]:
+        if isinstance(msg, SystemMessage):
+            return {"type": "system", "text": msg.content}
+        if isinstance(msg, HumanMessage):
+            content = msg.content
+            text = content[0] if isinstance(content, list) else content
+            has_image = any(isinstance(c, dict) and c.get("type") == "image_url" for c in content[1:])
+            return {"type": "human", "text": text, "has_image": has_image}
+        if isinstance(msg, AIMessage):
+            return {"type": "ai", "text": msg.content}
+        return {"type": str(type(msg)), "text": str(msg)}
+
+    logger.info("messages (summary): %s", [summarize_message(m) for m in messages])
+
+
 def handle_llm_invoke(
     llm_model: str,
     system_prompt: str,
@@ -70,7 +86,7 @@ def handle_llm_invoke(
 ) -> str | list[str | dict[str, object]]:
     try:
         llm = ChatGoogleGenerativeAI(model=llm_model)
-        messages = []
+        messages: list[BaseMessage] = []
         messages.append(SystemMessage(content=system_prompt))
 
         if history:
@@ -82,6 +98,8 @@ def handle_llm_invoke(
             messages.append(HumanMessage(content=[user_prompt, cast(dict[str, Any], image_dict)]))
         else:
             messages.append(HumanMessage(content=[user_prompt]))
+
+        output_messeges_summary(messages)
 
         result = llm.invoke(messages)
     except Exception as e:
