@@ -35,9 +35,9 @@ async def generate_text(
     history = (
         MessageHistory(
             entries=_parse_history_entries(history_json) if history_json else [],
-            images=history_images,
+            images=history_images or [],
         )
-        if (history_json and history_images)
+        if history_json
         else None
     )
     content = handle_llm_invoke(
