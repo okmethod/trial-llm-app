@@ -15,15 +15,16 @@ class GeminiImageDict(TypedDict):
     image_url: str
 
 
-def uploadfile_to_gemini_image_dict(image: UploadFile) -> GeminiImageDict:
-    """
-    UploadFile を Gemini API用の image_dict形式に変換
-    """
+def image_file_to_data_uri(image: UploadFile) -> str:
     image_bytes = image.file.read() if hasattr(image, "file") else asyncio.run(image.read())
     image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+    return f"data:{image.content_type};base64,{image_b64}"
+
+
+def uploadfile_to_gemini_image_dict(image: UploadFile) -> GeminiImageDict:
     return {
         "type": "image_url",
-        "image_url": f"data:{image.content_type};base64,{image_b64}",
+        "image_url": image_file_to_data_uri(image),
     }
 
 
