@@ -13,5 +13,5 @@ logger = logging.getLogger(__name__)
 @router.post("/gen-text")
 async def generate_text(request: LLMRequest) -> LLMResponse:
     settings = get_settings()
-    result = handle_llm_invoke(settings.llm_model, request.prompt)
-    return LLMResponse(result=str(result))
+    content = handle_llm_invoke(settings.llm_model, request.prompt)
+    return LLMResponse(answer=str(content))

@@ -6,4 +6,4 @@ class LLMRequest(BaseModel):
 
 
 class LLMResponse(BaseModel):
-    result: str
+    answer: str
