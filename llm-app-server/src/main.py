@@ -4,7 +4,7 @@ from logging.config import fileConfig
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.routes import heartbeat, llm
+from src.routes import generate_text, heartbeat
 from src.settings import get_settings
 
 fileConfig("src/logging.ini", disable_existing_loggers=False)
@@ -39,7 +39,7 @@ app.include_router(
 )
 
 app.include_router(
-    llm.router,
+    generate_text.router,
     prefix="/api",
     tags=["LLM"],
 )
