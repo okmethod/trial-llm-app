@@ -14,23 +14,28 @@
 
   async function sendMessage() {
     if (!currentInputText.trim()) return;
-    chatEntries = [
-      ...chatEntries,
-      {
-        role: "human",
-        content: {
-          text: currentInputText,
-          ...(currentImage ? { image: currentImage } : {}),
-        },
-      },
-    ];
     isProcessing = true;
+    const history = chatEntries;
+    const humanEntry: ChatEntry = {
+      role: "human",
+      content: {
+        text: currentInputText,
+        ...(currentImage ? { image: currentImage } : {}),
+      },
+    };
+    chatEntries = [...chatEntries, humanEntry];
+
     try {
-      const answer = await generateText(fetch, currentInputText, currentImage?.file ?? undefined);
-      chatEntries = [...chatEntries, { role: "ai", content: { text: answer } }];
+      const answer = await generateText(fetch, currentInputText, currentImage?.file ?? undefined, history);
+      const aiEntry: ChatEntry = {
+        role: "ai",
+        content: { text: answer },
+      };
+      chatEntries = [...chatEntries, aiEntry];
     } catch {
       showErrorToast("エラーが発生しました");
     }
+
     currentInputText = "";
     currentImage = null;
     isProcessing = false;
