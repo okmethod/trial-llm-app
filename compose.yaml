@@ -23,6 +23,7 @@ services:
       - 8000:8000
     environment:
       GOOGLE_CLOUD_PROJECT: emulator
+      GOOGLE_API_KEY: (sensive)
     volumes:
       - ./llm-app-server:/app
       - llm-app-server-venv:/app/.venv
