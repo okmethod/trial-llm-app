@@ -2,34 +2,34 @@
   import { FileUpload } from "@skeletonlabs/skeleton-svelte";
   import Icon from "@iconify/svelte";
   import type { FileChangeDetails } from "@zag-js/file-upload";
+  import type { ImageWithPreview } from "$lib/types/image";
 
-  export let uploadedImage: File | null = null;
-  export let uploadedImageUrl: string | null = null;
+  export let uploadedImage: ImageWithPreview | null = null;
 
   function handleFileChange(details: FileChangeDetails) {
     const file = details.acceptedFiles[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        uploadedImage = file;
-        uploadedImageUrl = e.target?.result as string;
+        uploadedImage = {
+          file: file,
+          url: e.target?.result as string,
+        };
       };
       reader.readAsDataURL(file);
     } else {
       uploadedImage = null;
-      uploadedImageUrl = null;
     }
   }
 
   function removeImage() {
     uploadedImage = null;
-    uploadedImageUrl = null;
   }
 </script>
 
 <div class="flex items-center justify-center">
-  {#if !uploadedImageUrl}
-    {#key uploadedImageUrl}
+  {#if !uploadedImage}
+    {#key uploadedImage}
       <FileUpload
         name="image"
         accept="image/*"
@@ -51,7 +51,7 @@
     {/key}
   {:else}
     <div class="flex justify-center relative">
-      <img src={uploadedImageUrl} alt="previewImage" class="size-full rounded border" />
+      <img src={uploadedImage.url} alt="previewImage" class="size-full rounded border" />
       <button
         type="button"
         class="absolute top-0 right-0 bg-opacity-70 rounded-full text-gray-500"

@@ -1,13 +1,13 @@
 <script lang="ts">
   import ImageUpload from "$lib/components/buttons/ImageUpload.svelte";
   import generateText from "$lib/api/generateText";
+  import type { ImageWithPreview } from "$lib/types/image";
   import { showErrorToast } from "$lib/utils/toaster";
 
   let messages: { role: "user" | "assistant"; content: string }[] = [];
   let isProcessing = false;
 
-  let uploadedImage: File | null = null;
-  let uploadedImageUrl: string | null = null;
+  let currentImage: ImageWithPreview | null = null;
 
   let input = "";
   async function sendMessage() {
@@ -15,14 +15,13 @@
     messages = [...messages, { role: "user", content: input }];
     isProcessing = true;
     try {
-      const answer = await generateText(fetch, input, uploadedImage ?? undefined);
+      const answer = await generateText(fetch, input, currentImage?.file ?? undefined);
       messages = [...messages, { role: "assistant", content: answer }];
     } catch {
       showErrorToast("エラーが発生しました");
     }
     input = "";
-    uploadedImage = null;
-    uploadedImageUrl = null;
+    currentImage = null;
     isProcessing = false;
   }
 </script>
@@ -58,7 +57,7 @@
       disabled={isProcessing}
     />
     <div class="size-16">
-      <ImageUpload bind:uploadedImage bind:uploadedImageUrl />
+      <ImageUpload bind:uploadedImage={currentImage} />
     </div>
     <button type="submit" class="btn preset-filled-primary-500 rounded-lg" disabled={isProcessing || !input.trim()}>
       送信
