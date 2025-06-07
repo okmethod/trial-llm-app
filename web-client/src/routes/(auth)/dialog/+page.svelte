@@ -10,22 +10,22 @@
   }
 
   let chatEntries: ChatEntry[] = [];
+
+  let currentInputText = "";
+  let currentImage: ImageWithPreview | null = null;
   let isProcessing = false;
 
-  let currentImage: ImageWithPreview | null = null;
-
-  let input = "";
   async function sendMessage() {
-    if (!input.trim()) return;
-    chatEntries = [...chatEntries, { role: "user", content: input }];
+    if (!currentInputText.trim()) return;
+    chatEntries = [...chatEntries, { role: "user", content: currentInputText }];
     isProcessing = true;
     try {
-      const answer = await generateText(fetch, input, currentImage?.file ?? undefined);
+      const answer = await generateText(fetch, currentInputText, currentImage?.file ?? undefined);
       chatEntries = [...chatEntries, { role: "assistant", content: answer }];
     } catch {
       showErrorToast("エラーが発生しました");
     }
-    input = "";
+    currentInputText = "";
     currentImage = null;
     isProcessing = false;
   }
@@ -56,7 +56,7 @@
       type="text"
       id="chat-input"
       name="prompt"
-      bind:value={input}
+      bind:value={currentInputText}
       placeholder="メッセージを入力"
       autocomplete="off"
       disabled={isProcessing}
@@ -64,7 +64,11 @@
     <div class="size-16">
       <ImageUpload bind:uploadedImage={currentImage} />
     </div>
-    <button type="submit" class="btn preset-filled-primary-500 rounded-lg" disabled={isProcessing || !input.trim()}>
+    <button
+      type="submit"
+      class="btn preset-filled-primary-500 rounded-lg"
+      disabled={isProcessing || !currentInputText.trim()}
+    >
       送信
     </button>
   </form>
