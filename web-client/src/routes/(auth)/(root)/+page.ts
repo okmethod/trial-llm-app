@@ -4,10 +4,10 @@ import { GITHUB_REPO_URL } from "$lib/constants/common";
 
 const contentLinks: TransitionContent[] = [
   {
-    label: "Example route",
-    symbolSrc: { type: "icon", key: "mdi:page-next" },
+    label: "Dialog Chat",
+    symbolSrc: { type: "icon", key: "mdi:chat-processing" },
     action: "navigate",
-    target: "/example",
+    target: "/dialog",
   },
   {
     label: "Github Repository",

@@ -8,7 +8,7 @@
 </script>
 
 <div class="flex flex-col items-center justify-center p-4">
-  <h2 class="h3 sm:h2">Welcome to My Static Site !</h2>
+  <h2 class="h3 sm:h2">Welcome to My LLM App !</h2>
 
   <div class="space-y-4 my-4">
     {#each data.buttonConfigs as config, key (key)}
