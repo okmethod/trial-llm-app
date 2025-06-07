@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, status
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.schemas.llm import LLMRequest, LLMResponse
+from src.settings import get_settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -11,8 +12,9 @@ logger = logging.getLogger(__name__)
 
 @router.post("/gen-text")
 async def llm_endpoint(request: LLMRequest) -> LLMResponse:
+    settings = get_settings()
     try:
-        llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")  # APIキーは環境変数で設定
+        llm = ChatGoogleGenerativeAI(model=settings.llm_model)
         result = llm.invoke(request.prompt)
         return LLMResponse(result=result.content)
     except Exception as e:

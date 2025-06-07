@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     google_cloud_project: str | None = google_cloud_project
     default_region: str | None = default_region
 
+    llm_model: str = "gemini-2.0-flash"
+    # APIキーは環境変数 GOOGLE_API_KEY で設定
+
 
 @lru_cache
 def get_settings() -> Settings:
