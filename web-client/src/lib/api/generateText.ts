@@ -5,18 +5,23 @@ interface ResponseJson {
   message: string;
 }
 
-async function generateText(fetchFunction: typeof fetch, prompt: string): Promise<string> {
+async function generateText(fetchFunction: typeof fetch, prompt: string, image?: File): Promise<string> {
   const url = pathGenText;
   const requestInit = constructRequestInit();
 
   const formData = new FormData();
   formData.append("prompt", prompt);
+  if (image) {
+    formData.append("image", image);
+  }
 
   const requestConfig = {
     ...requestInit,
     method: "POST",
     headers: {
+      ...requestInit.headers,
       Accept: "application/json",
+      // Content-Type は自動設定
     },
     body: formData,
   };
