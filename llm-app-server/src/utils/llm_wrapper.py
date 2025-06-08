@@ -5,11 +5,10 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
 from src.models.base_model import BaseModelSingleton
 from src.schemas.message import MessageHistory
-from src.utils.image_utils import attach_image_uris_to_entries
+from src.utils.image_utils import attach_image_uris_to_entries, uploadfile_to_image_dict
 from src.utils.message_utils import (
     convert_entries_to_messages,
     output_messeges_summary,
-    uploadfile_to_image_dict,
 )
 
 logger = logging.getLogger(__name__)
