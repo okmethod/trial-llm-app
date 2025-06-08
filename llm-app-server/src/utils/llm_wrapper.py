@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from typing import Any
 
 from fastapi import HTTPException, status
@@ -62,3 +62,33 @@ def handle_llm_invoke(
             logger.warning("llm.invoke did not return BaseMessage, got: %s", type(result))
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return result.content
+
+
+def handle_llm_stream(
+    llm_singleton: "BaseModelSingleton",
+    system_prompt: str,
+    user_prompt: str,
+    image: ImageBytes | None = None,
+    history: MessageHistory | None = None,
+) -> Generator[str, None, None]:
+    messages = _build_llm_messages(
+        system_prompt,
+        user_prompt,
+        image,
+        history,
+        llm_singleton.image_dict_factory,
+    )
+    output_messeges_summary(messages)
+
+    def _raise_stream_error(chunk_type: type) -> None:
+        logger.warning("llm.stream did not return BaseMessage, got: %s", chunk_type)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    try:
+        for chunk in llm_singleton.llm.stream(messages):
+            if not isinstance(chunk, BaseMessage):
+                _raise_stream_error(type(chunk))
+            yield chunk.content
+    except Exception as e:
+        logger.exception("Failed to stream generate text.")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR) from e

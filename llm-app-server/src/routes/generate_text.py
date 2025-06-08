@@ -1,9 +1,11 @@
 import json
 import logging
+from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, UploadFile
+from fastapi.responses import StreamingResponse
 from pydantic import TypeAdapter, ValidationError
 
 from src.models.gemini_model import GeminiModelSingleton
@@ -12,7 +14,7 @@ from src.schemas.message import MessageEntryWithImageKey, MessageHistory
 from src.schemas.response_body import SimpleMessageResponse
 from src.settings import get_settings
 from src.utils.image_utils import uploadfile_to_image_bytes
-from src.utils.llm_wrapper import handle_llm_invoke
+from src.utils.llm_wrapper import handle_llm_invoke, handle_llm_stream
 from src.utils.message_utils import build_message_history
 
 router = APIRouter()
@@ -67,4 +69,26 @@ async def generate_text(
         history=ctx.history,
         llm_singleton=llm_singleton,
     )
+
     return SimpleMessageResponse(message=str(content))
+
+
+@router.post("/gen-text-stream")
+async def generate_text_stream(
+    prompt: Annotated[str, Form(...)],
+    image: Annotated[UploadFile | None, File()] = None,
+    history_json: Annotated[str | None, Form()] = None,
+    history_images: Annotated[list[UploadFile] | None, File()] = None,
+) -> StreamingResponse:
+    ctx = await _prepare_llm_context(image, history_json, history_images)
+
+    def _stream_generator() -> Generator[str, None, None]:
+        yield from handle_llm_stream(
+            llm_singleton=llm_singleton,
+            system_prompt=ctx.system_prompt,
+            user_prompt=prompt,
+            image=ctx.image,
+            history=ctx.history,
+        )
+
+    return StreamingResponse(_stream_generator(), media_type="text/plain")
