@@ -9,7 +9,7 @@ class ModelNotInitializedError(Exception):
     """モデルが初期化されていない場合に発生するエラー"""
 
 
-class BaseModelSingleton(ABC):
+class BaseLLMClient(ABC):
     @abstractmethod
     def initialize(self, llm_model: str) -> None:
         """LLMインスタンス等を初期化する"""

@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import HTTPException, status
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
-from src.models.base_model import BaseModelSingleton
+from src.llm_clients.base_client import BaseLLMClient
 from src.schemas.image import ImageBytes
 from src.schemas.message import MessageHistory
 from src.utils.image_utils import attach_image_uris_to_entries, bytes_to_image_dict
@@ -37,7 +37,7 @@ def _build_llm_messages(
 
 
 def handle_llm_invoke(
-    llm_singleton: "BaseModelSingleton",
+    llm_client: "BaseLLMClient",
     system_prompt: str,
     user_prompt: str,
     image: ImageBytes | None = None,
@@ -48,12 +48,12 @@ def handle_llm_invoke(
         user_prompt,
         image,
         history,
-        llm_singleton.image_dict_factory,
+        llm_client.image_dict_factory,
     )
     output_messeges_summary(messages)
 
     try:
-        result = llm_singleton.llm.invoke(messages)
+        result = llm_client.llm.invoke(messages)
     except Exception as e:
         logger.exception("Failed to generate text.")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR) from e
@@ -65,7 +65,7 @@ def handle_llm_invoke(
 
 
 def handle_llm_stream(
-    llm_singleton: "BaseModelSingleton",
+    llm_client: "BaseLLMClient",
     system_prompt: str,
     user_prompt: str,
     image: ImageBytes | None = None,
@@ -76,7 +76,7 @@ def handle_llm_stream(
         user_prompt,
         image,
         history,
-        llm_singleton.image_dict_factory,
+        llm_client.image_dict_factory,
     )
     output_messeges_summary(messages)
 
@@ -85,7 +85,7 @@ def handle_llm_stream(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     try:
-        for chunk in llm_singleton.llm.stream(messages):
+        for chunk in llm_client.llm.stream(messages):
             if not isinstance(chunk, BaseMessage):
                 _raise_stream_error(type(chunk))
             yield chunk.content

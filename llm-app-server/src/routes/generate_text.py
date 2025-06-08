@@ -8,7 +8,7 @@ from fastapi import APIRouter, File, Form, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import TypeAdapter, ValidationError
 
-from src.models.gemini_model import GeminiModelSingleton
+from src.llm_clients.gemini_client import GeminiClientSingleton
 from src.schemas.image import ImageBytes
 from src.schemas.message import MessageEntryWithImageKey, MessageHistory
 from src.schemas.response_body import SimpleMessageResponse
@@ -20,7 +20,7 @@ from src.utils.message_utils import build_message_history
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-llm_singleton = GeminiModelSingleton()
+llm_client = GeminiClientSingleton()
 
 
 def _parse_history_entries(history_json: str) -> list[MessageEntryWithImageKey]:
@@ -49,7 +49,7 @@ async def _prepare_llm_context(
     entries = _parse_history_entries(history_json) if history_json else []
     images = [await uploadfile_to_image_bytes(img) for img in history_images] if history_images else []
     history = build_message_history(entries, images) if entries or images else None
-    llm_singleton.initialize(settings.llm_model)
+    llm_client.initialize(settings.llm_model)
     return LLMContext(system_prompt=settings.system_prompt, image=image_byte_obj, history=history)
 
 
@@ -63,11 +63,11 @@ async def generate_text(
     ctx = await _prepare_llm_context(image, history_json, history_images)
 
     content = handle_llm_invoke(
+        llm_client=llm_client,
         system_prompt=ctx.system_prompt,
         user_prompt=prompt,
         image=ctx.image,
         history=ctx.history,
-        llm_singleton=llm_singleton,
     )
 
     return SimpleMessageResponse(message=str(content))
@@ -84,7 +84,7 @@ async def generate_text_stream(
 
     def _stream_generator() -> Generator[str, None, None]:
         yield from handle_llm_stream(
-            llm_singleton=llm_singleton,
+            llm_client=llm_client,
             system_prompt=ctx.system_prompt,
             user_prompt=prompt,
             image=ctx.image,

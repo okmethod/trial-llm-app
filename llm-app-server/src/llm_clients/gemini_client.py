@@ -3,15 +3,15 @@ from typing import Any
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from src.models.base_model import BaseModelSingleton, ModelNotInitializedError
+from src.llm_clients.base_client import BaseLLMClient, ModelNotInitializedError
 
 
-class GeminiModelSingleton(BaseModelSingleton):
-    _instance: "GeminiModelSingleton | None" = None
+class GeminiClientSingleton(BaseLLMClient):
+    _instance: "GeminiClientSingleton | None" = None
     _llm_instance: ChatGoogleGenerativeAI | None = None
     _image_dict_factory: Callable[[str], dict[str, Any]] | None = None
 
-    def __new__(cls) -> "GeminiModelSingleton":
+    def __new__(cls) -> "GeminiClientSingleton":
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
