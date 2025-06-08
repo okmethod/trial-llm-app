@@ -10,6 +10,7 @@ from src.schemas.message import MessageEntryWithImageKey, MessageHistory
 from src.schemas.response_body import SimpleMessageResponse
 from src.settings import get_settings
 from src.utils.llm_wrapper import handle_llm_invoke
+from src.utils.message_utils import build_message_history
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -35,14 +36,7 @@ async def generate_text(
 ) -> SimpleMessageResponse:
     settings = get_settings()
 
-    history = (
-        MessageHistory(
-            entries=_parse_history_entries(history_json) if history_json else [],
-            images=history_images or [],
-        )
-        if history_json
-        else None
-    )
+    history = build_message_history(_parse_history_entries(history_json), history_images) if history_json else None
 
     llm_singleton.initialize(settings.llm_model)
 

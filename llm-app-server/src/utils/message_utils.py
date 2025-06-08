@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import UploadFile
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 
-from src.schemas.message import MessageEntryWithImageUri
+from src.schemas.message import MessageEntryWithImageKey, MessageEntryWithImageUri, MessageHistory
 from src.utils.image_utils import image_file_to_data_uri
 
 logger = logging.getLogger(__name__)
@@ -31,6 +31,12 @@ def convert_entries_to_messages(
     image_dict_factory: Callable[[str], dict[str, Any]],
 ) -> list[HumanMessage | AIMessage]:
     return [entry_to_message(entry, image_dict_factory) for entry in entries]
+
+
+def build_message_history(
+    entries: list[MessageEntryWithImageKey], history_images: list[UploadFile] | None
+) -> MessageHistory | None:
+    return MessageHistory(entries=entries, images=history_images or [])
 
 
 def uploadfile_to_image_dict(image: UploadFile, image_dict_factory: Callable[[str], dict[str, Any]]) -> dict[str, Any]:
