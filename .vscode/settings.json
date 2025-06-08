@@ -2,6 +2,7 @@
   "files.exclude": {
     "web-client": true,
     "llm-app-server": true,
+    "poke-mcp-server": true,
   },
   "[makefile]": {
     "editor.insertSpaces": false,

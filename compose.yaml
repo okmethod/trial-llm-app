@@ -31,6 +31,22 @@ services:
       ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--log-config", "src/logging.ini", "--reload"]
     tty: true
 
+  poke-mcp-server:
+    build:
+      context: ./poke-mcp-server
+      target: development
+      args:
+        PYTHON_VERSION: 3.11.11
+    ports:
+      - 8001:8000
+    volumes:
+      - ./poke-mcp-server:/app
+      - poke-mcp-server-venv:/app/.venv
+    command:
+      ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--log-config", "src/logging.ini", "--reload"]
+    tty: true
+
 volumes:
   web-client-node-modules:
   llm-app-server-venv:
+  poke-mcp-server-venv:

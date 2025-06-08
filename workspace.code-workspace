@@ -9,6 +9,9 @@
 		{
 			"path": "llm-app-server"
 		},
+		{
+			"path": "poke-mcp-server"
+		},
 	],
 	"settings": {}
 }
