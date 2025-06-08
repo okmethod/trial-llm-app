@@ -17,3 +17,18 @@ export async function fetchApi(
     throw new Error(`Failed to fetch: ${requestConfig.method} ${url}`);
   }
 }
+
+export async function fetchStreamApi(
+  fetchFunction: typeof fetch,
+  url: string,
+  requestConfig: RequestInit,
+): Promise<ReadableStream<Uint8Array>> {
+  try {
+    const response = await fetchFunction(url, requestConfig);
+    if (!response.body) throw new Error("No response body");
+    return response.body;
+  } catch (e) {
+    console.error("Stream API error:", e);
+    throw new Error(`Failed to fetch stream: ${requestConfig.method} ${url}`);
+  }
+}

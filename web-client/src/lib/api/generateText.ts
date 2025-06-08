@@ -12,7 +12,7 @@ interface MessageEntryWithImageKey {
   image_key: string | null;
 }
 
-function extractHistoryEntriesAndImages(chatHistory: ChatEntry[]): {
+export function extractHistoryEntriesAndImages(chatHistory: ChatEntry[]): {
   entries: MessageEntryWithImageKey[];
   images: { file: File; filename: string }[];
 } {
@@ -32,7 +32,7 @@ function extractHistoryEntriesAndImages(chatHistory: ChatEntry[]): {
   return { entries, images };
 }
 
-function buildChatFormData(prompt: string, image?: File, chatHistory?: ChatEntry[]): FormData {
+export function buildChatFormData(prompt: string, image?: File, chatHistory?: ChatEntry[]): FormData {
   const formData = new FormData();
   formData.append("prompt", prompt);
   if (image) formData.append("image", image);
@@ -46,7 +46,7 @@ function buildChatFormData(prompt: string, image?: File, chatHistory?: ChatEntry
   return formData;
 }
 
-function buildChatRequestConfig(formData: FormData, accept: string): RequestInit {
+export function buildChatRequestConfig(formData: FormData, accept: string): RequestInit {
   const requestInit = constructRequestInit();
   return {
     ...requestInit,
