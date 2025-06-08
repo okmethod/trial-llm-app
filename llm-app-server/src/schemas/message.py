@@ -1,7 +1,8 @@
 from typing import Literal
 
-from fastapi import UploadFile
 from pydantic import BaseModel
+
+from src.schemas.image import ImageBytes
 
 
 class MessageEntry(BaseModel):
@@ -19,4 +20,4 @@ class MessageEntryWithImageUri(MessageEntry):
 
 class MessageHistory(BaseModel):
     entries: list[MessageEntryWithImageKey]
-    images: list[UploadFile]
+    images: list[ImageBytes]

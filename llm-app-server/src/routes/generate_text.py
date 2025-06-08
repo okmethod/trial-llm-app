@@ -9,6 +9,7 @@ from src.models.gemini_model import GeminiModelSingleton
 from src.schemas.message import MessageEntryWithImageKey, MessageHistory
 from src.schemas.response_body import SimpleMessageResponse
 from src.settings import get_settings
+from src.utils.image_utils import uploadfile_to_image_bytes
 from src.utils.llm_wrapper import handle_llm_invoke
 from src.utils.message_utils import build_message_history
 
@@ -36,14 +37,17 @@ async def generate_text(
 ) -> SimpleMessageResponse:
     settings = get_settings()
 
-    history = build_message_history(_parse_history_entries(history_json), history_images) if history_json else None
+    image_byte_obj = await uploadfile_to_image_bytes(image) if image else None
+    image_byte_objs = [await uploadfile_to_image_bytes(img) for img in history_images] if history_images else []
+
+    history = build_message_history(_parse_history_entries(history_json), image_byte_objs) if history_json else None
 
     llm_singleton.initialize(settings.llm_model)
 
     content = handle_llm_invoke(
         system_prompt=settings.system_prompt,
         user_prompt=prompt,
-        image=image,
+        image=image_byte_obj,
         history=history,
         llm_singleton=llm_singleton,
     )

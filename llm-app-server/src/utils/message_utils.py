@@ -2,9 +2,9 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from fastapi import UploadFile
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 
+from src.schemas.image import ImageBytes
 from src.schemas.message import MessageEntryWithImageKey, MessageEntryWithImageUri, MessageHistory
 
 logger = logging.getLogger(__name__)
@@ -33,9 +33,9 @@ def convert_entries_to_messages(
 
 
 def build_message_history(
-    entries: list[MessageEntryWithImageKey], history_images: list[UploadFile] | None
+    entries: list[MessageEntryWithImageKey], images: list[ImageBytes] | None
 ) -> MessageHistory | None:
-    return MessageHistory(entries=entries, images=history_images or [])
+    return MessageHistory(entries=entries, images=images or [])
 
 
 def output_messeges_summary(messages: list[BaseMessage]) -> None:
