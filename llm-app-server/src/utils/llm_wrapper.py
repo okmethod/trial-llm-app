@@ -1,4 +1,6 @@
 import logging
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import HTTPException, UploadFile, status
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
@@ -14,6 +16,25 @@ from src.utils.message_utils import (
 logger = logging.getLogger(__name__)
 
 
+def _build_llm_messages(
+    system_prompt: str,
+    user_prompt: str,
+    image: UploadFile | None,
+    history: MessageHistory | None,
+    image_dict_factory: Callable[[str], dict[str, Any]],
+) -> list[BaseMessage]:
+    messages: list[BaseMessage] = [SystemMessage(content=system_prompt)]
+    if history:
+        entries = attach_image_uris_to_entries(history.entries, history.images)
+        messages.extend(convert_entries_to_messages(entries, image_dict_factory))
+    if image is not None:
+        image_dict = uploadfile_to_image_dict(image, image_dict_factory)
+        messages.append(HumanMessage(content=[user_prompt, image_dict]))
+    else:
+        messages.append(HumanMessage(content=[user_prompt]))
+    return messages
+
+
 def handle_llm_invoke(
     llm_singleton: "BaseModelSingleton",
     system_prompt: str,
@@ -21,19 +42,13 @@ def handle_llm_invoke(
     image: UploadFile | None = None,
     history: MessageHistory | None = None,
 ) -> str | list[str | dict[str, object]]:
-    messages: list[BaseMessage] = []
-    messages.append(SystemMessage(content=system_prompt))
-
-    if history:
-        entries = attach_image_uris_to_entries(history.entries, history.images)
-        messages.extend(convert_entries_to_messages(entries, llm_singleton.image_dict_factory))
-
-    if image is not None:
-        image_dict = uploadfile_to_image_dict(image, llm_singleton.image_dict_factory)
-        messages.append(HumanMessage(content=[user_prompt, image_dict]))
-    else:
-        messages.append(HumanMessage(content=[user_prompt]))
-
+    messages = _build_llm_messages(
+        system_prompt,
+        user_prompt,
+        image,
+        history,
+        llm_singleton.image_dict_factory,
+    )
     output_messeges_summary(messages)
 
     try:
