@@ -1,11 +1,13 @@
 import json
 import logging
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, UploadFile
 from pydantic import TypeAdapter, ValidationError
 
 from src.models.gemini_model import GeminiModelSingleton
+from src.schemas.image import ImageBytes
 from src.schemas.message import MessageEntryWithImageKey, MessageHistory
 from src.schemas.response_body import SimpleMessageResponse
 from src.settings import get_settings
@@ -28,6 +30,27 @@ def _parse_history_entries(history_json: str) -> list[MessageEntryWithImageKey]:
         return []
 
 
+@dataclass
+class LLMContext:
+    system_prompt: str
+    image: ImageBytes | None
+    history: MessageHistory | None
+
+
+async def _prepare_llm_context(
+    image: UploadFile | None,
+    history_json: str | None,
+    history_images: list[UploadFile] | None,
+) -> LLMContext:
+    settings = get_settings()
+    image_byte_obj = await uploadfile_to_image_bytes(image) if image else None
+    entries = _parse_history_entries(history_json) if history_json else []
+    images = [await uploadfile_to_image_bytes(img) for img in history_images] if history_images else []
+    history = build_message_history(entries, images) if entries or images else None
+    llm_singleton.initialize(settings.llm_model)
+    return LLMContext(system_prompt=settings.system_prompt, image=image_byte_obj, history=history)
+
+
 @router.post("/gen-text")
 async def generate_text(
     prompt: Annotated[str, Form(...)],
@@ -35,20 +58,13 @@ async def generate_text(
     history_json: Annotated[str | None, Form()] = None,
     history_images: Annotated[list[UploadFile] | None, File()] = None,
 ) -> SimpleMessageResponse:
-    settings = get_settings()
-
-    image_byte_obj = await uploadfile_to_image_bytes(image) if image else None
-    image_byte_objs = [await uploadfile_to_image_bytes(img) for img in history_images] if history_images else []
-
-    history = build_message_history(_parse_history_entries(history_json), image_byte_objs) if history_json else None
-
-    llm_singleton.initialize(settings.llm_model)
+    ctx = await _prepare_llm_context(image, history_json, history_images)
 
     content = handle_llm_invoke(
-        system_prompt=settings.system_prompt,
+        system_prompt=ctx.system_prompt,
         user_prompt=prompt,
-        image=image_byte_obj,
-        history=history,
+        image=ctx.image,
+        history=ctx.history,
         llm_singleton=llm_singleton,
     )
     return SimpleMessageResponse(message=str(content))
