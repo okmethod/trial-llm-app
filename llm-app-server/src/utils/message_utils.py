@@ -39,7 +39,7 @@ def build_message_history(
 
 
 def output_messeges_summary(messages: list[BaseMessage]) -> None:
-    def summarize_message(msg: BaseMessage) -> dict[str, Any]:
+    def _summarize_message(msg: BaseMessage) -> dict[str, Any]:
         if isinstance(msg, SystemMessage):
             return {"type": "system", "text": msg.content}
         if isinstance(msg, HumanMessage):
@@ -51,4 +51,4 @@ def output_messeges_summary(messages: list[BaseMessage]) -> None:
             return {"type": "ai", "text": msg.content}
         return {"type": str(type(msg)), "text": str(msg)}
 
-    logger.info("messages (summary): %s", [summarize_message(m) for m in messages])
+    logger.info("messages (summary): %s", [_summarize_message(m) for m in messages])
