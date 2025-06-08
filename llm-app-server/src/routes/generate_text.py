@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, File, Form, UploadFile
 from pydantic import TypeAdapter, ValidationError
 
+from src.models.gemini_model import GeminiModelSingleton
 from src.schemas.message import MessageEntryWithImageKey, MessageHistory
 from src.schemas.response_body import SimpleMessageResponse
 from src.settings import get_settings
@@ -12,6 +13,8 @@ from src.utils.llm_wrapper import handle_llm_invoke
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+llm_singleton = GeminiModelSingleton()
 
 
 def _parse_history_entries(history_json: str) -> list[MessageEntryWithImageKey]:
@@ -40,11 +43,14 @@ async def generate_text(
         if history_json
         else None
     )
+
+    llm_singleton.initialize(settings.llm_model)
+
     content = handle_llm_invoke(
-        llm_model=settings.llm_model,
         system_prompt=settings.system_prompt,
         user_prompt=prompt,
         image=image,
         history=history,
+        llm_singleton=llm_singleton,
     )
     return SimpleMessageResponse(message=str(content))
