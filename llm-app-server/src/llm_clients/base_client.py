@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
 
+from langchain.agents import AgentExecutor
 from langchain_core.language_models.base import BaseLanguageModel
 
 
@@ -17,9 +18,14 @@ class BaseLLMClient(ABC):
     @property
     @abstractmethod
     def llm(self) -> BaseLanguageModel[Any]:
-        """BaseLanguageModelのサブクラスであるLLMインスタンスを返す"""
+        """BaseLanguageModel のサブクラスである LLMインスタンス"""
+
+    @property
+    @abstractmethod
+    def agent(self) -> AgentExecutor:
+        """Function Calling 対応の AgentExecutorインスタンス"""
 
     @property
     @abstractmethod
     def image_dict_factory(self) -> Callable[[str], dict[str, Any]]:
-        """各プロバイダに合わせた形の画像辞書を生成する関数を返す"""
+        """各プロバイダに合わせた形の画像辞書を生成する関数"""
