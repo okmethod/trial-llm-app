@@ -1,39 +1,21 @@
-from logging import getLogger
-from logging.config import fileConfig
+# https://github.com/modelcontextprotocol/python-sdk/tree/main?tab=readme-ov-file#quickstart
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+# server.py
+from mcp.server.fastmcp import FastMCP
 
-from src.routes import heartbeat
-from src.settings import get_settings
+# Create an MCP server
+mcp = FastMCP("Demo")
 
-fileConfig("src/logging.ini", disable_existing_loggers=False)
-root_logger = getLogger()
 
-settings = get_settings()
+# Add an addition tool
+@mcp.tool()
+def add(a: int, b: int) -> int:
+    """Add two numbers"""
+    return a + b
 
-app = FastAPI(
-    title=settings.app_name,
-    description="API for the sample application.",
-    version=settings.app_version,
-)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=[
-        "Content-Type",
-        "Accept",
-        "Cache-Control",
-        "Origin",
-    ],
-    expose_headers=["Content-Disposition"],
-)
-
-app.include_router(
-    heartbeat.router,
-    prefix="/mcp/heartbeat",
-    tags=["Root"],
-)
+# Add a dynamic greeting resource
+@mcp.resource("greeting://{name}")
+def get_greeting(name: str) -> str:
+    """Get a personalized greeting"""
+    return f"Hello, {name}!"
