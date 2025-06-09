@@ -10,7 +10,8 @@
 ├── .github
 ├── .vscode
 ├── web-client       : Webクライアント
-└── llm-app-server   : LLM APサーバ
+├── llm-app-server   : LLM APサーバ
+└── poke-mcp-server  : PokeAPI を具備する MCPサーバ
 ```
 
 ## アーキテクチャ
@@ -20,9 +21,13 @@ graph LR;
     CL[web-client]
     AP[llm-app-server]
     LLM[LLM]
+    MCP[poke-mcp-server]
+    POKEAPI[PokeAPI]
 
     CL --> AP
     AP --> LLM
+    AP --> MCP
+    MCP --> POKEAPI
 ```
 
 ## ローカルでの起動方法
