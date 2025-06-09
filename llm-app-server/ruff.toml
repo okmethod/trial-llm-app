@@ -66,7 +66,12 @@ select = [
     "FURB",  # refurb
     "RUF",   # Ruff-specific rules
 ]
-ignore = ["COM812"]
+ignore = [
+    "COM812", # Ignore commas in function calls
+    "TD002",  # Missing author in TODO
+    "TD003",  # Missing issue link for TODO
+    "FIX002", # Line contains TODO, consider resolving the issue
+]
 
 [lint.per-file-ignores]
 "tests/**" = ["S101"]
