@@ -12,7 +12,7 @@ class ModelNotInitializedError(Exception):
 
 class BaseLLMClient(ABC):
     @abstractmethod
-    def initialize(self, llm_model: str) -> None:
+    def initialize(self, llm_model: str, system_prompt: str) -> None:
         """LLMインスタンス等を初期化する"""
 
     @property

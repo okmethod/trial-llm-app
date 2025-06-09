@@ -2,6 +2,7 @@ from collections.abc import Callable
 from typing import Any
 
 from langchain.agents import AgentExecutor, AgentType, initialize_agent
+from langchain_core.messages import SystemMessage
 from langchain_core.tools import Tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -20,7 +21,7 @@ class GeminiClientSingleton(BaseLLMClient):
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def initialize(self, llm_model: str) -> None:
+    def initialize(self, llm_model: str, system_prompt: str) -> None:
         self._llm_instance = ChatGoogleGenerativeAI(model=llm_model)
         self._image_dict_factory = self.cast_to_gemini_image_dict
         tools: list[Tool] = [
@@ -34,6 +35,7 @@ class GeminiClientSingleton(BaseLLMClient):
             tools,
             self._llm_instance,
             agent=AgentType.OPENAI_FUNCTIONS,  # Function Calling を利用
+            system_message=SystemMessage(content=system_prompt),
             verbose=True,
         )
 

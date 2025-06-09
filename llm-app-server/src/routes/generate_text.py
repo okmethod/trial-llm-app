@@ -49,7 +49,7 @@ async def _prepare_llm_context(
     entries = _parse_history_entries(history_json) if history_json else []
     images = [await uploadfile_to_image_bytes(img) for img in history_images] if history_images else []
     history = build_message_history(entries, images) if entries or images else None
-    llm_client.initialize(settings.llm_model)
+    llm_client.initialize(settings.llm_model, settings.system_prompt)
     return LLMContext(system_prompt=settings.system_prompt, image=image_byte_obj, history=history)
 
 
