@@ -20,8 +20,8 @@ RUN apt-get update && \
     apt-get install -y curl && \
     curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} | bash - && \
     apt-get install -y nodejs && \
-    npm install -g npm
-
+    npm install -g npm && \
+    pip install --no-cache-dir uv mcp[cli]
 COPY --from=requirements-exporter /app/requirements_dev.txt ./
 RUN pip install --no-cache-dir -r requirements_dev.txt
 
