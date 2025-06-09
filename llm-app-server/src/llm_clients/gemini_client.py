@@ -2,6 +2,7 @@ from collections.abc import Callable
 from typing import Any
 
 from langchain.agents import AgentExecutor, AgentType, initialize_agent
+from langchain.memory import ConversationBufferMemory
 from langchain_core.messages import SystemMessage
 from langchain_core.tools import Tool
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -31,11 +32,13 @@ class GeminiClientSingleton(BaseLLMClient):
                 description="現在日時(UTC)を ISO8601形式で返す",
             )
         ]
+        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
         self._agent_instance = initialize_agent(
             tools,
             self._llm_instance,
             agent=AgentType.OPENAI_FUNCTIONS,  # Function Calling を利用
             system_message=SystemMessage(content=system_prompt),
+            memory=memory,
             verbose=True,
         )
 
