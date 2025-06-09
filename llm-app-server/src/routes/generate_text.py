@@ -13,6 +13,7 @@ from src.schemas.image import ImageBytes
 from src.schemas.message import MessageEntryWithImageKey, MessageHistory
 from src.schemas.response_body import SimpleMessageResponse
 from src.settings import get_settings
+from src.utils.agent_wrapper import handle_agent_invoke
 from src.utils.image_utils import uploadfile_to_image_bytes
 from src.utils.llm_wrapper import handle_llm_invoke, handle_llm_stream
 from src.utils.message_utils import build_message_history
@@ -92,3 +93,19 @@ async def generate_text_stream(
         )
 
     return StreamingResponse(_stream_generator(), media_type="text/plain")
+
+
+@router.post("/gen-text-agent")
+async def generate_text_agent(
+    prompt: Annotated[str, Form(...)],
+    history_json: Annotated[str | None, Form()] = None,
+) -> SimpleMessageResponse:
+    ctx = await _prepare_llm_context(None, history_json, None)  # 画像は非対応
+
+    content = handle_agent_invoke(
+        llm_client=llm_client,
+        user_prompt=prompt,
+        history=ctx.history,
+    )
+
+    return SimpleMessageResponse(message=str(content))
