@@ -6,6 +6,7 @@ from langchain_core.tools import Tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.llm_clients.base_client import BaseLLMClient, ModelNotInitializedError
+from src.tools.utils import get_current_utc_time
 
 
 class GeminiClientSingleton(BaseLLMClient):
@@ -22,7 +23,13 @@ class GeminiClientSingleton(BaseLLMClient):
     def initialize(self, llm_model: str) -> None:
         self._llm_instance = ChatGoogleGenerativeAI(model=llm_model)
         self._image_dict_factory = self.cast_to_gemini_image_dict
-        tools: list[Tool] = []  # TODO: Toolを追加する
+        tools: list[Tool] = [
+            Tool(
+                name="get_current_utc_time",
+                func=get_current_utc_time,
+                description="現在日時(UTC)を ISO8601形式で返す",
+            )
+        ]
         self._agent_instance = initialize_agent(
             tools,
             self._llm_instance,
