@@ -43,6 +43,7 @@ services:
     ports:
       - 8001:8000  # MCP server port
       - 6274:6274  # MCP Inspector port
+      - 6277:6277  # MCP Inspector Proxy port
     volumes:
       - ./poke-mcp-server:/app
       - poke-mcp-server-venv:/app/.venv
