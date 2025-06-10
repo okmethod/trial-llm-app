@@ -98,9 +98,11 @@ async def generate_text_stream(
 @router.post("/gen-text-agent")
 async def generate_text_agent(
     prompt: Annotated[str, Form(...)],
+    image: Annotated[UploadFile | None, File()] = None,
     history_json: Annotated[str | None, Form()] = None,
+    history_images: Annotated[list[UploadFile] | None, File()] = None,
 ) -> SimpleMessageResponse:
-    ctx = await _prepare_llm_context(None, history_json, None)  # 画像は非対応
+    ctx = await _prepare_llm_context(image, history_json, history_images)
 
     content = handle_agent_invoke(
         llm_client=llm_client,

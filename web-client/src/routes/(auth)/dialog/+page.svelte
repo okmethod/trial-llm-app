@@ -79,7 +79,7 @@
     await handleSendMessage(async (history, humanEntry) => {
       chatEntries = [...chatEntries, humanEntry];
       try {
-        const aiText = await generateTextAgent(fetch, currentInputText, history);
+        const aiText = await generateTextAgent(fetch, currentInputText, currentImage?.file ?? undefined, history);
         const aiEntry: ChatEntry = {
           role: "ai",
           content: { text: aiText },

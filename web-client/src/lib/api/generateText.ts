@@ -1,10 +1,7 @@
 import { constructRequestInit, fetchApi } from "$lib/utils/request";
 import { pathGenText } from "$lib/api/paths";
 import type { ChatRole, ChatEntry } from "$lib/types/chat";
-
-interface ResponseJson {
-  message: string;
-}
+import type { SimpleMessageJson } from "$lib/types/response";
 
 interface MessageEntryWithImageKey {
   role: ChatRole;
@@ -12,7 +9,7 @@ interface MessageEntryWithImageKey {
   image_key: string | null;
 }
 
-export function extractHistoryEntriesAndImages(chatHistory: ChatEntry[]): {
+function extractHistoryEntriesAndImages(chatHistory: ChatEntry[]): {
   entries: MessageEntryWithImageKey[];
   images: { file: File; filename: string }[];
 } {
@@ -70,7 +67,7 @@ async function generateText(
   const formData = buildChatFormData(prompt, image, chatHistory);
   const requestConfig = buildChatRequestConfig(formData, "application/json");
   const response = await fetchApi(fetchFunction, url, requestConfig);
-  const { message } = (await response.json()) as ResponseJson;
+  const { message } = (await response.json()) as SimpleMessageJson;
   return message;
 }
 

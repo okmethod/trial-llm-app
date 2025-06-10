@@ -1,48 +1,20 @@
-import { constructRequestInit, fetchApi } from "$lib/utils/request";
+import { fetchApi } from "$lib/utils/request";
 import { pathGenTextAgent } from "$lib/api/paths";
-import type { ChatRole, ChatEntry } from "$lib/types/chat";
-
-interface ResponseJson {
-  message: string;
-}
-
-function extractHistoryEntries(chatHistory: ChatEntry[]): {
-  role: ChatRole;
-  text: string;
-  image_key: null;
-}[] {
-  return chatHistory.map((entry) => ({
-    role: entry.role,
-    text: entry.content.text,
-    image_key: null,
-  }));
-}
+import { buildChatFormData, buildChatRequestConfig } from "$lib/api/generateText";
+import type { ChatEntry } from "$lib/types/chat";
+import type { SimpleMessageJson } from "$lib/types/response";
 
 export async function generateTextAgent(
   fetchFunction: typeof fetch,
   prompt: string,
+  image?: File,
   chatHistory?: ChatEntry[],
 ): Promise<string> {
   const url = pathGenTextAgent;
-  const formData = new FormData();
-  formData.append("prompt", prompt);
-  if (chatHistory && chatHistory.length > 0) {
-    const entries = extractHistoryEntries(chatHistory);
-    formData.append("history_json", JSON.stringify(entries));
-  }
-  const requestInit = constructRequestInit();
-  const requestConfig: RequestInit = {
-    ...requestInit,
-    method: "POST",
-    headers: {
-      ...requestInit.headers,
-      Accept: "application/json",
-      // Content-Typeは自動設定
-    },
-    body: formData,
-  };
+  const formData = buildChatFormData(prompt, image, chatHistory);
+  const requestConfig = buildChatRequestConfig(formData, "application/json");
   const response = await fetchApi(fetchFunction, url, requestConfig);
-  const { message } = (await response.json()) as ResponseJson;
+  const { message } = (await response.json()) as SimpleMessageJson;
   return message;
 }
 
