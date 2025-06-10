@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { Switch } from "@skeletonlabs/skeleton-svelte";
+  import { Segment } from "@skeletonlabs/skeleton-svelte";
   import Icon from "@iconify/svelte";
   import generateText from "$lib/api/generateText";
   import generateTextStream from "$lib/api/generateTextStream";
+  import generateTextAgent from "$lib/api/generateTextAgent";
   import type { ChatEntry } from "$lib/types/chat";
   import type { ImageWithPreview } from "$lib/types/image";
   import ChatEntriesVeiw from "$lib/components/ChatEntriesVeiw.svelte";
@@ -74,28 +75,56 @@
     });
   }
 
-  let useStream = false;
-  function handleStreamModeChange(checked: boolean) {
-    useStream = checked;
+  async function sendMessageAgent() {
+    await handleSendMessage(async (history, humanEntry) => {
+      chatEntries = [...chatEntries, humanEntry];
+      try {
+        const aiText = await generateTextAgent(fetch, currentInputText, history);
+        const aiEntry: ChatEntry = {
+          role: "ai",
+          content: { text: aiText },
+        };
+        chatEntries = [...chatEntries, aiEntry];
+      } catch {
+        showErrorToast("エラーが発生しました");
+      }
+    });
   }
+
+  type ChatMode = "sync" | "stream" | "agent";
+  let chatMode: ChatMode = "sync";
+  const chatModeOptions: Record<ChatMode, { label: string; icon: string; send: () => Promise<void> }> = {
+    sync: { label: "通常", icon: "mdi:message-outline", send: sendMessage },
+    stream: { label: "ストリーム", icon: "mdi:message-fast-outline", send: sendMessageStream },
+    agent: { label: "エージェント", icon: "mdi:robot-outline", send: sendMessageAgent },
+  };
+
+  const initialMessage = () => `${chatModeOptions[chatMode].label} モードでチャットを始めましょう。`;
 </script>
 
 <div class="flex flex-col items-center justify-center p-4 space-y-4 max-w-4xl mx-auto">
   <h2 class="h2">Dialog Chat</h2>
   <div class="flex items-center mb-2">
-    <Switch name="stream-mode" checked={useStream} onCheckedChange={(e) => handleStreamModeChange(e.checked)}>
-      {#snippet inactiveChild()}<Icon icon="mdi:play-circle-outline" class="size-4" />{/snippet}
-      {#snippet activeChild()}<Icon icon="mdi:play-speed" class="size-4" />{/snippet}
-    </Switch>
-    <span class="ml-2 text-sm text-gray-500 w-30">mode: {useStream ? "stream" : "sync"}</span>
+    <Segment
+      name="chatMode"
+      value={chatMode}
+      onValueChange={(e: { value: string | null }) => {
+        if (e.value === "sync" || e.value === "stream" || e.value === "agent") {
+          chatMode = e.value;
+        }
+      }}
+    >
+      {#each Object.entries(chatModeOptions) as [value, opt] (value)}
+        <Segment.Item {value}>
+          <Icon icon={opt.icon} class="w-5 h-5 mr-1 align-middle" />
+        </Segment.Item>
+      {/each}
+    </Segment>
   </div>
   <div class="w-full h-[400px] bg-surface-100-900">
-    <ChatEntriesVeiw {chatEntries} {isProcessing} />
+    <ChatEntriesVeiw initialMessage={initialMessage()} {chatEntries} {isProcessing} />
   </div>
-  <form
-    class="w-full flex space-x-2"
-    on:submit|preventDefault={() => (useStream ? sendMessageStream() : sendMessage())}
-  >
+  <form class="w-full flex space-x-2" on:submit|preventDefault={() => chatModeOptions[chatMode].send()}>
     <label id="chat-label" for="chat-input" class="sr-only">チャット入力</label>
     <input
       class="flex-1 border rounded p-2 text-gray-900"

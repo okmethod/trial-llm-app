@@ -1,13 +1,14 @@
 <script lang="ts">
   import type { ChatEntry } from "$lib/types/chat";
 
+  export let initialMessage: string = "チャットを始めましょう。";
   export let chatEntries: ChatEntry[] = [];
   export let isProcessing: boolean = false;
 </script>
 
 <div class="size-full border rounded p-4 flex flex-col space-y-2 overflow-y-auto">
   {#if chatEntries.length === 0}
-    <div class="text-gray-400">チャットを始めましょう。</div>
+    <div class="text-gray-400">{initialMessage}</div>
   {/if}
   {#each chatEntries as msg, index (index)}
     <div class:self-end={msg.role === "human"} class:self-start={msg.role === "ai"}>
