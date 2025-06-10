@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
 
-from langchain.agents import AgentExecutor
 from langchain_core.language_models.base import BaseLanguageModel
+from langgraph.graph.graph import CompiledGraph
 
 
 class ModelNotInitializedError(Exception):
@@ -22,8 +22,8 @@ class BaseLLMClient(ABC):
 
     @property
     @abstractmethod
-    def agent(self) -> AgentExecutor:
-        """Function Calling 対応の AgentExecutorインスタンス"""
+    def agent(self) -> CompiledGraph:
+        """Function Calling 対応の CompiledGraphインスタンス"""
 
     @property
     @abstractmethod

@@ -1,11 +1,12 @@
 from collections.abc import Callable
 from typing import Any
 
-from langchain.agents import AgentExecutor, AgentType, initialize_agent
-from langchain.memory import ConversationBufferMemory
-from langchain_core.messages import SystemMessage
+from langchain.prompts import ChatPromptTemplate
 from langchain_core.tools import Tool
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph.graph import CompiledGraph
+from langgraph.prebuilt import create_react_agent
 
 from src.llm_clients.base_client import BaseLLMClient, ModelNotInitializedError
 from src.tools.utils import get_current_utc_time
@@ -14,7 +15,7 @@ from src.tools.utils import get_current_utc_time
 class GeminiClientSingleton(BaseLLMClient):
     _instance: "GeminiClientSingleton | None" = None
     _llm_instance: ChatGoogleGenerativeAI | None = None
-    _agent_instance: AgentExecutor | None = None
+    _agent_instance: CompiledGraph | None = None
     _image_dict_factory: Callable[[str], dict[str, Any]] | None = None
 
     def __new__(cls) -> "GeminiClientSingleton":
@@ -25,21 +26,28 @@ class GeminiClientSingleton(BaseLLMClient):
     def initialize(self, llm_model: str, system_prompt: str) -> None:
         self._llm_instance = ChatGoogleGenerativeAI(model=llm_model)
         self._image_dict_factory = self.cast_to_gemini_image_dict
+        self._agent_instance = self._create_agent(self._llm_instance, system_prompt)
+
+    def _create_agent(self, llm: ChatGoogleGenerativeAI, system_prompt: str) -> CompiledGraph:
         tools: list[Tool] = [
             Tool(
                 name="get_current_utc_time",
                 func=get_current_utc_time,
-                description="現在日時(UTC)を ISO8601形式で返す",
+                description="現在日時(UTC)を ISO8601形式で返す。引数は無し。",
             )
         ]
-        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        self._agent_instance = initialize_agent(
-            tools,
-            self._llm_instance,
-            agent=AgentType.OPENAI_FUNCTIONS,  # Function Calling を利用
-            system_message=SystemMessage(content=system_prompt),
-            memory=memory,
-            verbose=True,
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system_prompt),
+                ("human", "{messages}"),
+            ]
+        )
+        memory = MemorySaver()
+        return create_react_agent(
+            model=llm,
+            tools=tools,
+            prompt=prompt,
+            checkpointer=memory,
         )
 
     @staticmethod
@@ -54,7 +62,7 @@ class GeminiClientSingleton(BaseLLMClient):
         return self._llm_instance
 
     @property
-    def agent(self) -> AgentExecutor:
+    def agent(self) -> CompiledGraph:
         if self._agent_instance is None:
             raise ModelNotInitializedError
         return self._agent_instance
