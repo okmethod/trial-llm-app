@@ -40,13 +40,13 @@ def build_message_history(
 
 
 def build_langchain_messages(
-    system_prompt: str,
+    system_prompt: str | None,
     user_prompt: str,
     image: ImageBytes | None,
     history: MessageHistory | None,
     image_dict_factory: Callable[[str], dict[str, Any]],
 ) -> list[BaseMessage]:
-    messages: list[BaseMessage] = [SystemMessage(content=system_prompt)]
+    messages: list[BaseMessage] = [SystemMessage(content=system_prompt)] if system_prompt else []
     if history:
         entries = attach_image_uris_to_entries(history.entries, history.images)
         messages.extend(convert_entries_to_messages(entries, image_dict_factory))
