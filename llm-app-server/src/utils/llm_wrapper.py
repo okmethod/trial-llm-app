@@ -1,39 +1,15 @@
 import logging
-from collections.abc import Callable, Generator
-from typing import Any
+from collections.abc import Generator
 
 from fastapi import HTTPException, status
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage
 
 from src.llm_clients.base_client import BaseLLMClient
 from src.schemas.image import ImageBytes
 from src.schemas.message import MessageHistory
-from src.utils.image_utils import attach_image_uris_to_entries, bytes_to_image_dict
-from src.utils.message_utils import (
-    convert_entries_to_messages,
-    output_messeges_summary,
-)
+from src.utils.message_utils import build_langchain_messages, output_messeges_summary
 
 logger = logging.getLogger(__name__)
-
-
-def _build_llm_messages(
-    system_prompt: str,
-    user_prompt: str,
-    image: ImageBytes | None,
-    history: MessageHistory | None,
-    image_dict_factory: Callable[[str], dict[str, Any]],
-) -> list[BaseMessage]:
-    messages: list[BaseMessage] = [SystemMessage(content=system_prompt)]
-    if history:
-        entries = attach_image_uris_to_entries(history.entries, history.images)
-        messages.extend(convert_entries_to_messages(entries, image_dict_factory))
-    if image is not None:
-        image_dict = bytes_to_image_dict(image.data, image.content_type, image_dict_factory)
-        messages.append(HumanMessage(content=[user_prompt, image_dict]))
-    else:
-        messages.append(HumanMessage(content=[user_prompt]))
-    return messages
 
 
 def handle_llm_invoke(
@@ -43,7 +19,7 @@ def handle_llm_invoke(
     image: ImageBytes | None = None,
     history: MessageHistory | None = None,
 ) -> str | list[str | dict[str, object]]:
-    messages = _build_llm_messages(
+    messages = build_langchain_messages(
         system_prompt,
         user_prompt,
         image,
@@ -71,7 +47,7 @@ def handle_llm_stream(
     image: ImageBytes | None = None,
     history: MessageHistory | None = None,
 ) -> Generator[str, None, None]:
-    messages = _build_llm_messages(
+    messages = build_langchain_messages(
         system_prompt,
         user_prompt,
         image,
